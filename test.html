@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JSONBin Auth Test</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    form { margin-bottom: 20px; }
+    input, button { margin: 5px 0; padding: 8px; width: 100%; }
+    .box { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+  <h2>Sign Up</h2>
+  <div class="box">
+    <form id="signup-form">
+      <input type="email" id="signup-email" placeholder="Email" required>
+      <input type="text" id="signup-username" placeholder="Username" required>
+      <input type="password" id="signup-password" placeholder="Password" required>
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+
+  <h2>Login</h2>
+  <div class="box">
+    <form id="login-form">
+      <input type="email" id="login-email" placeholder="Email" required>
+      <input type="password" id="login-password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <div id="message"></div>
+
+  <script>
+    const BIN_ID = '681568f78a456b79669672dc';
+    const MASTER_KEY = '$2a$10$a93Wz14f/5DUCwACUbuF6eLnVRO4UhHPzsOg38B1qo9ikgHYFHRtG';
+
+    const messageBox = document.getElementById('message');
+
+    async function getUsers() {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: {
+          'X-Master-Key': MASTER_KEY
+        }
+      });
+      const data = await res.json();
+      return data.record.users || [];
+    }
+
+    async function updateUsers(users) {
+      await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY,
+          'X-Bin-Private': 'true'
+        },
+        body: JSON.stringify({ users })
+      });
+    }
+
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value;
+      const username = document.getElementById('signup-username').value;
+      const password = document.getElementById('signup-password').value;
+
+      const users = await getUsers();
+
+      if (users.find(u => u.email === email)) {
+        messageBox.textContent = '❌ User already exists!';
+        return;
+      }
+
+      users.push({
+        user_id: 'local_' + Math.floor(Math.random() * 999999),
+        email,
+        username,
+        auth_provider: 'local',
+        password,
+        account_status: 'active'
+      });
+
+      await updateUsers(users);
+      messageBox.textContent = '✅ Sign-up successful!';
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      const users = await getUsers();
+      const user = users.find(u => u.email === email && u.password === password);
+
+      if (user) {
+        messageBox.textContent = `✅ Welcome back, ${user.username || user.email}!`;
+      } else {
+        messageBox.textContent = '❌ Invalid email or password';
+      }
+    });
+  </script>
+
+</body>
+</html>
