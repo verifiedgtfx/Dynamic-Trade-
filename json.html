@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #ffd700;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 30px;
+    }
+    .card {
+      background-color: #1a1a1a;
+      border: 1px solid #ffd70055;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 8px #ffd70033;
+      transition: 0.3s;
+    }
+    .card h3 {
+      margin-top: 0;
+      color: #fff;
+    }
+    .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <div class="card">
+      <h3>Total Balance</h3>
+      <div class="value" id="balance">Loading...</div>
+    </div>
+    <div class="card">
+      <h3>Last Trade</h3>
+      <div class="value" id="lastTrade">Loading...</div>
+    </div>
+    <div class="card">
+      <h3>Ongoing Trade</h3>
+      <div class="value" id="ongoingTrade">Loading...</div>
+    </div>
+    <div class="card">
+      <h3>Suggested Trade</h3>
+      <div class="value" id="suggestedTrade">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    const jsonBinUrl = "https://api.jsonbin.io/v3/b/681509758561e97a500c7998"; // Replace with your bin URL
+    const headers = {
+      "X-Master-Key": "YOUR_API_KEY" // Replace with your JSONBin API key
+    };
+
+    fetch(jsonBinUrl, { headers })
+      .then(res => res.json())
+      .then(data => {
+        const d = data.record;
+        animateNumber("balance", d.balance);
+        document.getElementById("lastTrade").textContent = d.last_trade;
+        document.getElementById("ongoingTrade").textContent = d.ongoing_trade;
+        document.getElementById("suggestedTrade").textContent = d.suggested_trade;
+      })
+      .catch(err => {
+        console.error("Error loading JSON:", err);
+      });
+
+    function animateNumber(id, target) {
+      const el = document.getElementById(id);
+      let current = 0;
+      const duration = 1000;
+      const steps = 30;
+      const increment = target / steps;
+      let step = 0;
+
+      const interval = setInterval(() => {
+        current += increment;
+        el.textContent = "$" + current.toFixed(2);
+        step++;
+        if (step >= steps) {
+          clearInterval(interval);
+          el.textContent = "$" + Number(target).toFixed(2);
+        }
+      }, duration / steps);
+    }
+  </script>
+</body>
+</html>
